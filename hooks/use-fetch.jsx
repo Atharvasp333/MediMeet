@@ -1,9 +1,9 @@
-import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState } from "react";
+import { toast } from "sonner";
 
 const useFetch = (cb) => {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState(undefined);
+    const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
 
     const fn = async (...args) => {
@@ -20,9 +20,9 @@ const useFetch = (cb) => {
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    return {data, loading, error, fn, setData }
-}
+    return { data, loading, error, fn, setData };
+};
 
 export default useFetch;
