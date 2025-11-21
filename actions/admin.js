@@ -49,7 +49,7 @@ export async function getPendingDoctors() {
     }
 }
 
-export async function getverifiedDoctors() {
+export async function getVerifiedDoctors() {
     const isAdmin = await verifyAdmin();
 
     if (!isAdmin) {
