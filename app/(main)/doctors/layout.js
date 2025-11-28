@@ -1,11 +1,11 @@
 import React from 'react'
 
-const MainLayout = ({ children }) => {
+const DoctorLayout = ({ children }) => {
   return (
-    <div className="container mx-auto py-28">
-      {children}
+    <div className="container mx-auto px-4 py-28">
+      <div className="max-w-6xl mx-auto">{children}</div>
     </div>
   );
 };
 
-export default MainLayout;
+export default DoctorLayout;
