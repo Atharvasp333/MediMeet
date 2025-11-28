@@ -4,15 +4,18 @@ import { DoctorCard } from "@/components/doctor-card";
 import { PageHeader } from "@/components/page-header";
 
 export default async function DoctorSpecialtyPage({ params }) {
-  const { specialty } = params;
+  const { speciality } = await params;
 
   // Redirect to main doctors page if no speciality is provided
-  if (!specialty) {
+  if (!speciality) {
     redirect("/doctors");
   }
 
+  // Decode the URL-encoded speciality
+  const decodedSpeciality = decodeURIComponent(speciality);
+
   // Fetch doctors by speciality
-  const { doctors, error } = await getDoctorsBySpecialty(specialty);
+  const { doctors, error } = await getDoctorsBySpecialty(decodedSpeciality);
 
   if (error) {
     console.error("Error fetching doctors:", error);
@@ -21,7 +24,7 @@ export default async function DoctorSpecialtyPage({ params }) {
   return (
     <div className="space-y-5">
       <PageHeader
-        title={specialty.split("%20").join(" ")}
+        title={decodedSpeciality}
         backLink="/doctors"
         backLabel="All Specialties"
       />
