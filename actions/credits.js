@@ -116,3 +116,73 @@ export async function checkAndAllocateCredits(user) {
         return null;
     }
 }
+
+export async function deductCreditsForAppointment(userId, doctorId) {
+    try {
+        const user = await db.user.findUnique({
+            where: {
+                id: userId,
+            },
+        });
+
+        const doctor = await db.user.findUnique({
+            where: {
+                id: doctorId,
+            },
+        });
+
+        if (user.credits < APPOINTMENT_CREDIT_COST) {
+            throw new Error("Not enough credits");
+        }
+
+        if (!doctor) {
+            throw new Error("Doctor not found");
+        }
+
+        const result = await db.$transaction(async (tx) => {
+            await tx.creditTransaction.create({
+                data: {
+                    userId: userId,
+                    amount: -APPOINTMENT_CREDIT_COST,
+                    type: "APPOINTMENT_DEDUCTION",
+                }
+            })
+
+            await tx.creditTransaction.create({
+                data: {
+                    userId: doctorId,
+                    amount: APPOINTMENT_CREDIT_COST,
+                    type: "APPOINTMENT_DEDUCTION",
+                }
+            })
+            const updatedUser = await tx.user.update({
+                where: {
+                    id: user.id,
+                },
+                data: {
+                    credits: {
+                        decrement: APPOINTMENT_CREDIT_COST,
+                    },
+                },
+            });
+
+            // Update doctor's credit balance (increment)
+            await tx.user.update({
+                where: {
+                    id: doctor.id,
+                },
+                data: {
+                    credits: {
+                        increment: APPOINTMENT_CREDIT_COST,
+                    },
+                },
+            });
+
+            return updatedUser;
+        });
+
+        return { success: true, user: result };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
