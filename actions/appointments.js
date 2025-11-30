@@ -1,8 +1,8 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { Auth } from "@vonage/auth";
-import { addMinutes, format } from "date-fns";
-
+import { addDays, addMinutes, format, isBefore, endOfDay } from "date-fns";
+import { Vonage } from "@vonage/server-sdk";
 
 const credentials = new Auth({
     applicationId: process.env.NEXT_PUBLIC_VONAGE_APPLICATION_ID,
@@ -24,9 +24,11 @@ export async function getDoctorById(doctorId) {
         if (!doctor) {
             throw new Error("Doctor not found");
         }
-        return doctor;
+
+        return { doctor };
     } catch (error) {
-        throw new Error("Failed to fetch doctor", error);
+        console.error("Failed to fetch doctor:", error);
+        throw new Error("Failed to fetch doctor details");
     }
 }
 
@@ -58,7 +60,7 @@ export async function getAvailableTimeSlots(doctorId) {
         const now = new Date();
         const days = [now, addDays(now, 1), addDays(now, 2), addDays(now, 3)]
 
-        const lastDay = endofDay(days[3]);
+        const lastDay = endOfDay(days[3]);
 
         const existingAppointments = await db.appointment.findMany({
             where: {
@@ -232,26 +234,26 @@ export async function bookAppointment(formData) {
 
         const sessionId = await createVideoSession();
 
-            const { success, error } = await deductCreditsForAppointment(
-                patient.id,
-                doctor.id,
-            )
+        const { success, error } = await deductCreditsForAppointment(
+            patient.id,
+            doctor.id,
+        )
 
-            if (!success) {
-                throw new Error(error || "Failed to deduct credits");
-            }
+        if (!success) {
+            throw new Error(error || "Failed to deduct credits");
+        }
 
-            const appointment = await tx.appointment.create({
-                data: {
-                    patientId: patient.id,
-                    doctorId: doctor.id,
-                    startTime,
-                    endTime,
-                    status: "SCHEDULED",
-                    patientDescription,
-                    videoSessionId: sessionId,
-                },
-            });
+        const appointment = await tx.appointment.create({
+            data: {
+                patientId: patient.id,
+                doctorId: doctor.id,
+                startTime,
+                endTime,
+                status: "SCHEDULED",
+                patientDescription,
+                videoSessionId: sessionId,
+            },
+        });
 
         revalidatePath("/appointments");
         return { success: true, appointment: appointment };
