@@ -46,7 +46,7 @@ export async function setAvailabilitySlots(formData) {
             );
 
             if(slotsWithNoAppointments.length > 0) {
-                await db.availabilitySlot.deleteMany({
+                await db.availability.deleteMany({
                     where: {
                         id: {
                             in: slotsWithNoAppointments.map((slot) => slot.id),

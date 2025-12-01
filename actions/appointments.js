@@ -46,7 +46,7 @@ export async function getAvailableTimeSlots(doctorId) {
             throw new Error("Doctor not found");
         }
 
-        const availability = await db.findFirst({
+        const availability = await db.availability.findFirst({
             where: {
                 doctorId: doctor.id,
                 status: "AVAILABLE",
@@ -74,7 +74,7 @@ export async function getAvailableTimeSlots(doctorId) {
 
         const availableSlotsByDays = {};
 
-        for (day of days) {
+        for (const day of days) {
             const dayString = format(day, "yyyy-MM-dd");
             availableSlotsByDays[dayString] = [];
 
@@ -133,12 +133,12 @@ export async function getAvailableTimeSlots(doctorId) {
             }
         }
 
-        const result = Object.entries(availableSlotsByDays).map(([day, slots]) => ({
+        const result = Object.entries(availableSlotsByDays).map(([date, slots]) => ({
             date,
             displayDate:
                 slots.length > 0
                     ? slots[0].day
-                    : format(new Date(day), "EEEE, MMMM d"),
+                    : format(new Date(date), "EEEE, MMMM d"),
             slots,
         }));
 
