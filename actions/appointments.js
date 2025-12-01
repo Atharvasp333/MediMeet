@@ -1,8 +1,12 @@
+"use server"
+
 import { db } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { Auth } from "@vonage/auth";
 import { addDays, addMinutes, format, isBefore, endOfDay } from "date-fns";
 import { Vonage } from "@vonage/server-sdk";
+import { deductCreditsForAppointment } from "@/actions/credits";
+import { revalidatePath } from "next/cache";
 
 const credentials = new Auth({
     applicationId: process.env.NEXT_PUBLIC_VONAGE_APPLICATION_ID,
@@ -243,7 +247,7 @@ export async function bookAppointment(formData) {
             throw new Error(error || "Failed to deduct credits");
         }
 
-        const appointment = await tx.appointment.create({
+        const appointment = await db.appointment.create({
             data: {
                 patientId: patient.id,
                 doctorId: doctor.id,
@@ -258,7 +262,7 @@ export async function bookAppointment(formData) {
         revalidatePath("/appointments");
         return { success: true, appointment: appointment };
     } catch (error) {
-        throw new Error("Failed to book appointment", error);
+        throw new Error("Failed to book appointment" + error.message);
     }
 }
 
